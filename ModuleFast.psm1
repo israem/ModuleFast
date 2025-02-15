@@ -520,7 +520,8 @@ function Get-ModuleFastPlan {
     [int]$ParentProgress,
     [string]$Destination,
     [switch]$DestinationOnly,
-    [CancellationToken]$CancellationToken
+    [CancellationToken]$CancellationToken,
+    [string]$TargetFramework
   )
 
   BEGIN {
@@ -781,9 +782,7 @@ function Get-ModuleFastPlan {
 
         Write-Verbose "${selectedModule}: Added to install plan"
 
-        # HACK: Pwsh doesn't care about target framework as of today so we can skip that evaluation
-        # TODO: Should it? Should we check for the target framework and only install if it matches?
-        $dependencyInfo = $selectedEntry.dependencyGroups.dependencies
+        $dependencyInfo = $selectedEntry.dependencyGroups | where {$_.targetFramework -eq $TargetFramework} | foreach {$_.dependencies}
 
         #Determine dependencies and add them to the pending tasks
         if ($dependencyInfo) {
