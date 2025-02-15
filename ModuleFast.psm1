@@ -521,7 +521,7 @@ function Get-ModuleFastPlan {
     [string]$Destination,
     [switch]$DestinationOnly,
     [CancellationToken]$CancellationToken,
-    [string]$TargetFramework
+    [string]$TargetFramework = '*'
   )
 
   BEGIN {
@@ -782,7 +782,10 @@ function Get-ModuleFastPlan {
 
         Write-Verbose "${selectedModule}: Added to install plan"
 
-        $dependencyInfo = $selectedEntry.dependencyGroups | where {$_.targetFramework -eq $TargetFramework} | foreach {$_.dependencies}
+        $dependencyInfo = $selectedEntry.dependencyGroups 
+        | Where-Object {$_.targetFramework -like $TargetFramework} 
+        | ForEach-Object {$_.dependencies}
+        | Where-Object {$_}
 
         #Determine dependencies and add them to the pending tasks
         if ($dependencyInfo) {
@@ -1519,6 +1522,7 @@ class ModuleFastSpec {
   #HACK: A helper because we can't do constructor chaining in PowerShell
   #https://stackoverflow.com/questions/44413206/constructor-chaining-in-powershell-call-other-constructors-in-the-same-class
   hidden Initialize([string]$Name, [VersionRange]$Range, [guid]$Guid) {
+    WRite-Debug "$Name, $Range, $Guid"
     #HACK: The nulls here are just to satisfy the ternary operator, they go off into the ether and arent returned or used
     if (-not $Name) { throw 'Name is required' }
     # Strip ! from the beginning or end of the name
